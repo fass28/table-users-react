@@ -1,13 +1,12 @@
-import { ThemeProvider } from "@//components/theme-provider"
-import { ModeToggle } from "./components/mode-toggle"
-
+import { ThemeProvider } from "@/components/themeProvider"
+import { Home } from "./pages/home"
 import './App.css'
 
 function App() {
 
   return (
-    <ThemeProvider defaultTheme="dark">
-      <ModeToggle />
+    <ThemeProvider defaultTheme="dark" storageKey="theme">
+      <Home />
     </ThemeProvider>
   )
 }
