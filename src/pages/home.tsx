@@ -1,5 +1,5 @@
-import { ModeToggle } from "@/components/modeToggle"
-import { TableDemo } from "@/components/userTables"
+import { ModeToggle } from  "@/components/mode-toggle"
+import { TableDemo } from "@/components/user-tables"
 
 export const Home = () => {
     return (
