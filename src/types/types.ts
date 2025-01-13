@@ -3,8 +3,8 @@ export type User = {
     user: string;
     email: string;
     name: string;
-    lastName_father: string;
-    lastName_mother: string;
+    lastNameFather: string;
+    lastNameMother: string;
     password: string;
     user_type: string;
     created_at: string;
@@ -12,3 +12,12 @@ export type User = {
 }
 
 export type Users = User[]
+
+export type UserUpdate = {
+    id: number;
+    name: string;
+    lastNameFather: string;
+    lastNameMother: string;
+    user: string;
+    email: string;
+}

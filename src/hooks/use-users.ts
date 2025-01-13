@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { User} from '../types/types'
+import { UserUpdate } from '../types/types'
 
 export const useUsers = () => {
   const [userIsDeleted, setUserIsDeleted] = useState(false)
-
 
   const URL = 'http://localhost:3000/users/'
   const deleteUser = async (id: number) => {
@@ -18,10 +17,10 @@ export const useUsers = () => {
       console.error(err)
     }
   }
-  const updateUser = async (id: number, user: User) => {
+  const updateUser = async (id: number, user: UserUpdate) => {
     try {
       const response = await fetch(`${URL}${id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -33,6 +32,7 @@ export const useUsers = () => {
       console.error(err)
     }
   }
+
   return {
     deleteUser,
     updateUser,

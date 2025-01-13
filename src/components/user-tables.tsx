@@ -15,34 +15,39 @@ import { FooterPagination } from "./footer-pagination"
 import { Input } from "./ui/input"
 import { useFetchUser } from "@/hooks/get-users"
 import { useUsers } from "@/hooks/use-users"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "./ui/label"
+import { User, UserUpdate } from "@/types/types"
 
-type User = {
-    id: number;
-    user: string;
-    email: string;
-    name: string;
-    lastName_father: string;
-    lastName_mother: string;
-    password: string;
-    user_type: string;
-    created_at: string;
-    updated_at: string;
-}
-
-type UserKey = 'id' | 'user' | 'email' | 'name' | 'lastName_father' | 'lastName_mother'
-
+type UserKey = 'id' | 'user' | 'email' | 'name' | 'lastNameFather' | 'lastNameMother'
 
 export function TableDemo() {
 
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
-    const { users, isLoading, error,    fetchUsers } = useFetchUser();
+    const { users, isLoading, error, fetchUsers } = useFetchUser();
     const [data, setData] = useState<User[]>([]);
     const [searchId, setSeatchId] = useState<string>('');
     const [searchUser, setSeatchUser] = useState<string>('');
     const [searchEmail, setSeatchEmail] = useState<string>('');
     const [searchName, setSeatchName] = useState<string>('');
     const [deleteById, setDeleteById] = useState('');
-    const { deleteUser } = useUsers();
+    const [editUser, setEditUser] = useState<UserUpdate>({
+        id: 0,
+        name: '',
+        lastNameFather: '',
+        lastNameMother: '',
+        user: '',
+        email: ''
+    });
+    const { deleteUser, updateUser } = useUsers();
 
     useEffect(() => {
         setData(users);
@@ -120,7 +125,7 @@ export function TableDemo() {
 
     const handleSearchName = () => {
         const filteredUsers = users.filter((user) => {
-            const fullName = `${user.name} ${user.lastName_father} ${user.lastName_mother}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const fullName = `${user.name} ${user.lastNameFather} ${user.lastNameMother}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             console.log(fullName);
 
             return fullName.includes(searchName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
@@ -130,26 +135,22 @@ export function TableDemo() {
 
 
 
-    const onChangeId = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onChangeSearchId = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSeatchId(e.target.value);
-        console.log(e.target.value)
     }
 
-    const onChangeUser = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onChangeSearchUser = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSeatchUser(e.target.value);
         console.log(e.target.value)
     }
 
-    const onChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onChangeSearchEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSeatchEmail(e.target.value);
-        console.log(e.target.value)
     }
 
     const onChangeName = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSeatchName(e.target.value);
-        console.log(e.target.value)
     }
-
 
     const handleDelete = async (id: number) => {
         setDeleteById(id.toString());
@@ -158,74 +159,178 @@ export function TableDemo() {
         console.log(deleteById);
     }
 
+    const handleEdit = ({ id, user, name, lastNameFather, lastNameMother, email }: UserUpdate) => {
+        setEditUser({
+            id,
+            user,
+            name,
+            lastNameFather,
+            lastNameMother,
+            email
+        });
+    }
+
+    const onChageName = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setEditUser({
+            ...editUser,
+            name: e.target.value
+        });
+    }
+
+
+    const onChangeFatherLastName = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setEditUser({
+            ...editUser,
+            lastNameFather: e.target.value
+        });
+    }
+
+    const onChangeMotherLastName = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setEditUser({
+            ...editUser,
+            lastNameMother: e.target.value
+        });
+    }
+
+    const onChangeUser = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setEditUser({
+            ...editUser,
+            user: e.target.value
+        });
+    }
+
+    const onChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setEditUser({
+            ...editUser,
+            email: e.target.value
+        })
+    }
+
+    const handleSubmit = async (id: number) => {
+        await updateUser(id, editUser);
+        fetchUsers()
+    }
 
     if (isLoading) return <p>Loading...</p>; // Mensaje mientras los datos se cargan
     if (error) return <p>Error: {error}</p>; // Mensaje en caso de error
     if (data.length === 0) return <p>No users found</p>; // Mensaje si el array está vacío
 
     return (
-        <Table>
-            <TableCaption>A list of Users.</TableCaption>
-            <TableHeader>
-                <TableRow>
-                    <TableHead className="font-medium">
-                        <div className="flex items-center space-x-2">
-                            <span className="mx-5">Id</span>
-                            <Button className="" size="sm" onClick={() => handleSortId('id')}><ArrowUpDown /></Button>
-                            <Input type="text" placeholder="Search" value={searchId} onChange={onChangeId} size={1} />
-                            <Button className="" size="sm" onClick={handleSearchId}><Search /></Button>
-                        </div>
+        <>
+            <Table>
+                <TableCaption>A list of Users.</TableCaption>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="font-medium">
+                            <div className="flex items-center space-x-2">
+                                <span className="mx-5">Id</span>
+                                <Button className="" size="sm" onClick={() => handleSortId('id')}><ArrowUpDown /></Button>
+                                <Input type="text" placeholder="Search" value={searchId} onChange={onChangeSearchId} size={1} />
+                                <Button className="" size="sm" onClick={handleSearchId}><Search /></Button>
+                            </div>
 
-                    </TableHead>
-                    <TableHead className="font-medium">
-                        <div className="flex items-center space-x-2">
-                            <span className="mx-5">User</span>
-                            <Button className="" size="sm" onClick={() => handleSortUser('user')}><ArrowUpDown /></Button>
-                            <Input type="text" placeholder="Search" value={searchUser} onChange={onChangeUser} size={1} />
-                            <Button className="" size="sm" onClick={handleSearchUser}><Search /></Button>
-                        </div>
+                        </TableHead>
+                        <TableHead className="font-medium">
+                            <div className="flex items-center space-x-2">
+                                <span className="mx-5">User</span>
+                                <Button className="" size="sm" onClick={() => handleSortUser('user')}><ArrowUpDown /></Button>
+                                <Input type="text" placeholder="Search" value={searchUser} onChange={onChangeSearchUser} size={1} />
+                                <Button className="" size="sm" onClick={handleSearchUser}><Search /></Button>
+                            </div>
 
-                    </TableHead>
-                    <TableHead className="font-medium">
-                        <div className="flex items-center space-x-2">
-                            <span className="mx-5">Email</span>
-                            <Button className="" size="sm" onClick={() => handleSortEmail('email')}><ArrowUpDown /></Button>
-                            <Input type="text" placeholder="Search" value={searchEmail} onChange={onChangeEmail} size={1} />
-                            <Button className="" size="sm" onClick={handleSearchEmail}><Search /></Button>
-                        </div>
+                        </TableHead>
+                        <TableHead className="font-medium">
+                            <div className="flex items-center space-x-2">
+                                <span className="mx-5">Email</span>
+                                <Button className="" size="sm" onClick={() => handleSortEmail('email')}><ArrowUpDown /></Button>
+                                <Input type="text" placeholder="Search" value={searchEmail} onChange={onChangeSearchEmail} size={1} />
+                                <Button className="" size="sm" onClick={handleSearchEmail}><Search /></Button>
+                            </div>
 
-                    </TableHead>
-                    <TableHead className="font-medium">
-                        <div className="flex items-center space-x-2">
-                            <span className="mx-5">Name</span>
-                            <Button className="" size="sm" onClick={() => handleSortName('name')}><ArrowUpDown /></Button>
-                            <Input type="text" placeholder="Search" value={searchName} onChange={onChangeName} size={1} />
-                            <Button className="" size="sm" onClick={handleSearchName}><Search /></Button>
-                        </div>
+                        </TableHead>
+                        <TableHead className="font-medium">
+                            <div className="flex items-center space-x-2">
+                                <span className="mx-5">Name</span>
+                                <Button className="" size="sm" onClick={() => handleSortName('name')}><ArrowUpDown /></Button>
+                                <Input type="text" placeholder="Search" value={searchName} onChange={onChangeName} size={1} />
+                                <Button className="" size="sm" onClick={handleSearchName}><Search /></Button>
+                            </div>
 
-                    </TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {data.map((user) => (
-                    <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.id}</TableCell>
-                        <TableCell>{user.user}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>{`${user.name} ${user.lastName_father} ${user.lastName_mother}`}
-                        </TableCell>
-                        <TableCell className="text-right space-x-2">
-                            <Button className="btn btn-sm btn-primary"><Pencil /></Button>
-                            <Button className="btn btn-sm btn-danger"  onClick={() => handleDelete(user.id)} ><Trash /></Button>
-                        </TableCell>
+                        </TableHead>
                     </TableRow>
-                ))}
-            </TableBody>
-            <TableFooter>
-                <TableRow>
-                    <TableCell colSpan={12}> <FooterPagination /></TableCell>
-                </TableRow>
-            </TableFooter>
-        </Table>
+                </TableHeader>
+                <TableBody>
+                    {data.map((user) => (
+                        <TableRow key={user.id}>
+                            <TableCell className="font-medium">{user.id}</TableCell>
+                            <TableCell>
+                                {user.user}
+                            </TableCell>
+                            <TableCell>{user.email}</TableCell>
+                            <TableCell>{`${user.name} ${user.lastNameFather} ${user.lastNameMother}`}
+                            </TableCell>
+                            <TableCell className="text-right space-x-2">
+                                <Dialog>
+
+                                    <DialogTrigger className="btn btn-sm btn-primary" onClick={() => handleEdit(user)}>
+                                        <Pencil />
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                            <DialogTitle>Edit User {user.id}</DialogTitle>
+                                            <DialogDescription>
+                                                Make changes to the user here. Click save when you're done.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="name" className="text-right">
+                                                    Name
+                                                </Label>
+                                                <Input id="name" defaultValue={user.name} onChange={onChageName} className="col-span-3" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="name" className="text-right">
+                                                    Father Lastname
+                                                </Label>
+                                                <Input id="name" defaultValue={user.lastNameFather} onChange={onChangeFatherLastName} className="col-span-3" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="name" className="text-right">
+                                                    Mother Lastname
+                                                </Label>
+                                                <Input id="name" defaultValue={user.lastNameMother} onChange={onChangeMotherLastName} className="col-span-3" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="username" className="text-right">
+                                                    User
+                                                </Label>
+                                                <Input id="username" defaultValue={user.user} onChange={onChangeUser} className="col-span-3" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="username" className="text-right">
+                                                    Email
+                                                </Label>
+                                                <Input id="username" defaultValue={user.email} onChange={onChangeEmail} className="col-span-3" />
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <Button type="submit" onClick={() => handleSubmit(user.id)} >Save changes</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                                <Button className="btn btn-sm btn-danger" onClick={() => handleDelete(user.id)} ><Trash /></Button>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+                <TableFooter>
+                    <TableRow>
+                        <TableCell colSpan={12}> <FooterPagination /></TableCell>
+                    </TableRow>
+                </TableFooter>
+            </Table>
+
+        </>
     )
 }
