@@ -14,6 +14,7 @@ import { useEffect, useState } from "react"
 import { FooterPagination } from "./footer-pagination"
 import { Input } from "./ui/input"
 import { useFetchUser } from "@/hooks/get-users"
+import { useUsers } from "@/hooks/use-users"
 
 type User = {
     id: number;
@@ -34,20 +35,18 @@ type UserKey = 'id' | 'user' | 'email' | 'name' | 'lastName_father' | 'lastName_
 export function TableDemo() {
 
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
-    const { users, isLoading, error } = useFetchUser();
-    const [data, setData] = useState<User[]>(users);
-    //const [page, setPage] = useState(1);
+    const { users, isLoading, error,    fetchUsers } = useFetchUser();
+    const [data, setData] = useState<User[]>([]);
     const [searchId, setSeatchId] = useState<string>('');
     const [searchUser, setSeatchUser] = useState<string>('');
     const [searchEmail, setSeatchEmail] = useState<string>('');
     const [searchName, setSeatchName] = useState<string>('');
+    const [deleteById, setDeleteById] = useState('');
+    const { deleteUser } = useUsers();
 
     useEffect(() => {
         setData(users);
-    }, [isLoading]);
-
-
-
+    }, [users]);
 
 
     const handleSortId = (key: UserKey) => {
@@ -152,14 +151,17 @@ export function TableDemo() {
     }
 
 
+    const handleDelete = async (id: number) => {
+        setDeleteById(id.toString());
+        await deleteUser(id);
+        fetchUsers();
+        console.log(deleteById);
+    }
+
+
     if (isLoading) return <p>Loading...</p>; // Mensaje mientras los datos se cargan
     if (error) return <p>Error: {error}</p>; // Mensaje en caso de error
     if (data.length === 0) return <p>No users found</p>; // Mensaje si el array está vacío
-
-
-
-
-
 
     return (
         <Table>
@@ -214,7 +216,7 @@ export function TableDemo() {
                         </TableCell>
                         <TableCell className="text-right space-x-2">
                             <Button className="btn btn-sm btn-primary"><Pencil /></Button>
-                            <Button className="btn btn-sm btn-danger"><Trash /></Button>
+                            <Button className="btn btn-sm btn-danger"  onClick={() => handleDelete(user.id)} ><Trash /></Button>
                         </TableCell>
                     </TableRow>
                 ))}

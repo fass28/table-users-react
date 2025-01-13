@@ -1,19 +1,7 @@
 import { useEffect, useState } from "react";
+import  { Users } from "../types/types";
 
-type User = {
-    id: number;
-    user: string;
-    email: string;
-    name: string;
-    lastName_father: string;
-    lastName_mother: string;
-    password: string;
-    user_type: string;
-    created_at: string;
-    updated_at: string;
-}
 
-type Users = User[]
 
 const URL = 'http://localhost:3000/users';
 
@@ -22,25 +10,28 @@ const URL = 'http://localhost:3000/users';
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null); 
     
-    useEffect(()=>{
-        const fetchUsers = async () => {
-            try {
-                const response = await fetch(URL);
-                const data = await response.json();
-                setUsers(data.users);
-            } catch (err) {
-                setError(err as string);
-            } finally {
-                setIsLoading(false);
-                console.log('Fetch finished');
-            }
+    const fetchUsers = async () => {
+        try {
+            setIsLoading(true);
+            const response = await fetch(URL);
+            const data = await response.json();
+            setUsers(data.users);
+        } catch (err) {
+            setError(`Error al obtener los usuarios ${err}`);
+        } finally {
+            setIsLoading(false);
+            console.log('Fetch finished');
         }
-        fetchUsers();
-    },[])
+    };
+
+    useEffect(() => {
+        fetchUsers(); 
+    }, []);
     
     return{
         users,
         isLoading,
-        error
+        error,
+        fetchUsers,
     }
 }
