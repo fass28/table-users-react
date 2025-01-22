@@ -1,6 +1,6 @@
 export type User = {
     id: number;
-    user: string;
+    userName: string;
     email: string;
     name: string;
     lastNameFather: string;
@@ -14,10 +14,24 @@ export type User = {
 export type Users = User[]
 
 export type UserUpdate = {
+    name: string;
+    lastNameFather: string;
+    lastNameMother: string;
+    userName: string;
+    email: string;
+}
+
+export type UserEdit = {
     id: number;
     name: string;
     lastNameFather: string;
     lastNameMother: string;
-    user: string;
+    userName: string;
     email: string;
+    isDialogOpen?: boolean;
+}
+
+export type UserResponse = {
+    message: string;
+    user: User;
 }
