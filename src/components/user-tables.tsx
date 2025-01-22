@@ -4,20 +4,19 @@ import {
   TableCaption,
   TableCell,
   TableFooter,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Pencil, Trash, ArrowUpDown, Search } from "lucide-react"
+import { Pencil, Trash } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
 import { FooterPagination } from "./footer-pagination"
-import { Input } from "./ui/input"
 import { useUsers } from "@/hooks/user-users"
 import { useUser } from "@/hooks/use-user"
 import { User, UserEdit } from "@/types/types"
-import { useEditUser } from "@/store/user"
-import {  UserFormDialog } from "./user-form-dialog"
+import { useDialog, useEditUser } from "@/store/user"
+import { UserFormDialog } from "./user-form-dialog"
+import { Filters } from "./filters"
 
 
 type UserKey = keyof User;
@@ -27,20 +26,21 @@ export function TableDemo() {
   const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
   const { users, isLoading, error, fetchUsers } = useUsers();
   const [data, setData] = useState<User[]>([]);
-  const [searchId, setSeatchId] = useState<string>('');
-  const [searchUser, setSeatchUser] = useState<string>('');
-  const [searchEmail, setSeatchEmail] = useState<string>('');
-  const [searchName, setSeatchName] = useState<string>('');
+  const [searchId, setSearchId] = useState<string>('');
+  const [searchUser, setSearchUser] = useState<string>('');
+  const [searchEmail, setSearchEmail] = useState<string>('');
+  const [searchName, setSearchName] = useState<string>('');
 
   const { deleteUserById } = useUser();
-  const {  saveUser, openDialog } = useEditUser()
-  
+  const { saveUser } = useEditUser()
+  const { openDialog } = useDialog()
+
   useEffect(() => {
-    setData(users);    
+    setData(users);
   }, [users]);
 
 
-  const handleSortId = (key: UserKey) => {
+  const handleSort = (key: UserKey) => {
     const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
     setSortConfig({ key, direction });
 
@@ -51,92 +51,29 @@ export function TableDemo() {
     });
 
     setData(sortedUsers);
-  }
+  };
 
-  const handleSortUser = (key: UserKey) => {
-    const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
-    setSortConfig({ key, direction });
+  const handleSearch = (key: UserKey, value: string) => {
+    let filteredUsers;
 
-    const sortedUsers = [...users].sort((a, b) => {
-      if (a[key] < b[key]) return direction === 'asc' ? -1 : 1;
-      if (a[key] > b[key]) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
+    if (key === 'name') {
+      filteredUsers = users.filter((user) => {
+        const fullName = `${user.name} ${user.lastNameFather} ${user.lastNameMother}`
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        return fullName.includes(value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+      });
+    } else {
+      filteredUsers = users.filter((user) => user[key].toString().toLowerCase().includes(value.toLowerCase()));
+    }
 
-    setData(sortedUsers);
-  }
-
-  const handleSortEmail = (key: UserKey) => {
-    const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
-    setSortConfig({ key, direction });
-
-    const sortedUsers = [...users].sort((a, b) => {
-      if (a[key] < b[key]) return direction === 'asc' ? -1 : 1;
-      if (a[key] > b[key]) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    setData(sortedUsers);
-  }
-
-  const handleSortName = (key: UserKey) => {
-    const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
-    setSortConfig({ key, direction });
-
-    const sortedUsers = [...users].sort((a, b) => {
-      if (a[key] < b[key]) return direction === 'asc' ? -1 : 1;
-      if (a[key] > b[key]) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    setData(sortedUsers);
-  }
-
-  const handleSearchId = () => {
-    const filteredUsers = users.filter(user => user.id.toString() === searchId);
     setData(filteredUsers);
-    console.log(filteredUsers);
+  };
 
-  }
-
-  const handleSearchUser = () => {
-    const filteredUsers = users.filter(user => user.userName.includes(searchUser));
-    setData(filteredUsers);
-  }
-
-  const handleSearchEmail = () => {
-    const filteredUsers = users.filter(user => user.email.includes(searchEmail));
-    setData(filteredUsers);
-  }
-
-  const handleSearchName = () => {
-    const filteredUsers = users.filter((user) => {
-      const fullName = `${user.name} ${user.lastNameFather} ${user.lastNameMother}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      console.log(fullName);
-
-      return fullName.includes(searchName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
-    });
-    setData(filteredUsers);
-  }
-
-
-
-  const onChangeSearchId = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSeatchId(e.target.value);
-  }
-
-  const onChangeSearchUser = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSeatchUser(e.target.value);
-    console.log(e.target.value)
-  }
-
-  const onChangeSearchEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSeatchEmail(e.target.value);
-  }
-
-  const onChangeName = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSeatchName(e.target.value);
-  }
+  const handleSearchChange = (setter: React.Dispatch<React.SetStateAction<string>>, value: string) => {
+    setter(value);
+  };
 
   const handleDelete = async (id: number) => {
     await deleteUserById(id);
@@ -152,7 +89,6 @@ export function TableDemo() {
       lastNameFather: user.lastNameFather,
       lastNameMother: user.lastNameMother,
       email: user.email,
-      isDialogOpen: true
     });
     openDialog();
   };
@@ -171,42 +107,38 @@ export function TableDemo() {
         <TableCaption>A list of Users.</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="font-medium">
-              <div className="flex items-center space-x-2">
-                <span className="mx-5">Id</span>
-                <Button className="" size="sm" onClick={() => handleSortId('id')}><ArrowUpDown /></Button>
-                <Input type="text" placeholder="Search" value={searchId} onChange={onChangeSearchId} size={1} />
-                <Button className="" size="sm" onClick={handleSearchId}><Search /></Button>
-              </div>
-
-            </TableHead>
-            <TableHead className="font-medium">
-              <div className="flex items-center space-x-2">
-                <span className="mx-5">UserName</span>
-                <Button className="" size="sm" onClick={() => handleSortUser('userName')}><ArrowUpDown /></Button>
-                <Input type="text" placeholder="Search" value={searchUser} onChange={onChangeSearchUser} size={1} />
-                <Button className="" size="sm" onClick={handleSearchUser}><Search /></Button>
-              </div>
-
-            </TableHead>
-            <TableHead className="font-medium">
-              <div className="flex items-center space-x-2">
-                <span className="mx-5">Email</span>
-                <Button className="" size="sm" onClick={() => handleSortEmail('email')}><ArrowUpDown /></Button>
-                <Input type="text" placeholder="Search" value={searchEmail} onChange={onChangeSearchEmail} size={1} />
-                <Button className="" size="sm" onClick={handleSearchEmail}><Search /></Button>
-              </div>
-
-            </TableHead>
-            <TableHead className="font-medium">
-              <div className="flex items-center space-x-2">
-                <span className="mx-5">Name</span>
-                <Button className="" size="sm" onClick={() => handleSortName('name')}><ArrowUpDown /></Button>
-                <Input type="text" placeholder="Search" value={searchName} onChange={onChangeName} size={1} />
-                <Button className="" size="sm" onClick={handleSearchName}><Search /></Button>
-              </div>
-
-            </TableHead>
+            <Filters
+              title="Id"
+              field="id"
+              searchValue={searchId}
+              onSearchChange={(e) => handleSearchChange(setSearchId, e.target.value)}
+              onSort={() => handleSort('id')}
+              onSearch={() => handleSearch('id', searchId)}
+            />
+            <Filters
+              title="UserName"
+              field="userName"
+              searchValue={searchUser}
+              onSearchChange={(e) => handleSearchChange(setSearchUser, e.target.value)}
+              onSort={() => handleSort('userName')}
+              onSearch={() => handleSearch('userName', searchUser)}
+            />
+            <Filters
+              title="Email"
+              field="email"
+              searchValue={searchEmail}
+              onSearchChange={(e) => handleSearchChange(setSearchEmail, e.target.value)}
+              onSort={() => handleSort('email')}
+              onSearch={() => handleSearch('email', searchEmail)}
+            />
+            <Filters
+              title="Name"
+              field="name"
+              searchValue={searchName}
+              onSearchChange={(e) => handleSearchChange(setSearchName, e.target.value)}
+              onSort={() => handleSort('name')}
+              onSearch={() => handleSearch('name', searchName)}
+            />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -232,7 +164,7 @@ export function TableDemo() {
           </TableRow>
         </TableFooter>
       </Table>
-      <UserFormDialog onSuccess={onSuccess}/>
+      <UserFormDialog onSuccess={onSuccess} />
     </>
   )
 }

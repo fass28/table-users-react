@@ -5,7 +5,7 @@ import { Button } from "./ui/button"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useEditUser } from "@/store/user"
+import { useDialog, useEditUser } from "@/store/user"
 import { toast } from "@/hooks/use-toast"
 import { useUser } from "@/hooks/use-user"
 import { Loader2 } from "lucide-react"
@@ -15,8 +15,9 @@ type UserFormDialogProps = {
 }
 
 export const UserFormDialog = ({ onSuccess }: UserFormDialogProps) => {
-  const { getUser, closeDialog } = useEditUser()
-  const { id, userName, email, name, lastNameFather, lastNameMother, isDialogOpen } = getUser()
+  const { getUser } = useEditUser()
+  const { isDialogOpen,closeDialog } = useDialog()
+  const { id, userName, email, name, lastNameFather, lastNameMother } = getUser()
   const { updateUserById, isLoadingUpdate } = useUser();
 
   const formSchema = z.object({

@@ -8,8 +8,12 @@ type UserState = {
     saveUser: (userUpdate: UserEdit) => void
     deleteUser: () => void
     getUser: () => UserEdit
-    closeDialog: () => void
+}
+
+type DialogState = {
+    isDialogOpen: boolean
     openDialog: () => void
+    closeDialog: () => void
 }
 
 export const INITIAL_VALUE: UserEdit = {
@@ -19,7 +23,6 @@ export const INITIAL_VALUE: UserEdit = {
   lastNameFather: '',
   lastNameMother: '',
   email: '',
-  isDialogOpen: false,
 }
 
 export const useEditUser = create(
@@ -35,25 +38,22 @@ export const useEditUser = create(
         set(() => ({ user: INITIAL_VALUE }));
       },
       getUser: () => get().user,
-      closeDialog: () => {
-        set((state) => ({
-          user: {
-            ...state.user,
-            isDialogOpen: false,
-          },
-        }));
-      },
-      openDialog: () => {
-        set((state) => ({
-          user: {
-            ...state.user,
-            isDialogOpen: true,
-          },
-        }));
-      }
     }),
     {
       name: 'user-storage',
+    }
+  )
+);
+
+export const useDialog = create(
+  persist<DialogState>(
+    (set) => ({
+      isDialogOpen: false,
+      openDialog: () => set({ isDialogOpen: true }),
+      closeDialog: () => set({ isDialogOpen: false }),
+    }),
+    {
+      name: 'dialog-storage', // Persistencia del estado del diálogo
     }
   )
 );

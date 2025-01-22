@@ -28,7 +28,6 @@ export type UserEdit = {
     lastNameMother: string;
     userName: string;
     email: string;
-    isDialogOpen?: boolean;
 }
 
 export type UserResponse = {
